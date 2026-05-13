@@ -1,0 +1,8 @@
+{
+    "scripts": {
+        "dev": "concurrently \"npm run dev --prefix next_logic\" \"npm run dev --prefix websocket_logic\""
+    },
+    "dependencies": {
+        "concurrently": "^9.2.1"
+    }
+}
