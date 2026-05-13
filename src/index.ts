@@ -1,18 +1,30 @@
 import { WebSocketServer,WebSocket } from "ws";
+
 const wss = new WebSocketServer({port:8080});
-let userConnected=0;
-let allsockets:WebSocket[]=[];
-wss.on('connection',(socket)=>{
+type socketPair = [WebSocket,string];
+let allsockets:socketPair[]=[];
+wss.on('connection',(socket,req)=>{
     console.log("user connected");
-    allsockets.push(socket);
-    userConnected++;
-    console.log(""+userConnected);
+    let urlstring = req.url??'';
+      const parsedUrl = new URL(urlstring, `http://${req.headers.host}`);
+        const roomId = parsedUrl.searchParams.get('roomId') ?? 'default';
+    allsockets.push([socket,roomId]);
+    console.log(allsockets.length);
     socket.on('message',(data)=>{
         allsockets.forEach(element => {
-            if(element.readyState==WebSocket.OPEN)
+            if(element[1]==roomId)
             {
-            element.send(data.toString());
+                if(element[0].readyState==WebSocket.OPEN)
+                {
+                    element[0].send(data.toString());
+                }
             }
         });
-    }) 
+    });
+
+   socket.on('close',()=>{
+        allsockets = allsockets.filter(s=>s[0]!=socket);
+        console.log("user disconnected");
+        console.log(allsockets.length);
+   })
 })
