@@ -10,7 +10,7 @@ type Props={
 
 export const Create = ({open,onclose}:Props) => {
     const[id,setid] = useState("");
-    const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
     function genid() : string {
         const nanoid = customAlphabet(alphabet, 4);
         return `${nanoid()}-${nanoid()}`;
@@ -33,7 +33,7 @@ export const Create = ({open,onclose}:Props) => {
         
         <button
         onClick={() => {
-            const newid = genid;
+            const newid = genid();
             setid(newid);
         }
         }  

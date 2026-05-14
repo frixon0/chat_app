@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 
 type Props = {
@@ -9,7 +8,7 @@ type Props = {
 
 export const Socketconnect = ({ roomId }: Props) => {
     const socketref = useRef<WebSocket | null>(null)
-    const [latestmsg,setlatestmsg] = useState("");
+    const [allmsg,setallmsg] = useState<string[]>([]);
     const [msg,setmsg] =useState("");
     const [isConnected, setIsConnected] = useState(false);
     useEffect(()=>{
@@ -17,22 +16,20 @@ export const Socketconnect = ({ roomId }: Props) => {
         
         socket.onopen = ()=>{
             setIsConnected(true);
-            setlatestmsg(`connected to room, ${roomId}`)
+            
         }
         socketref.current = socket;
 
         socket.onmessage = (event)=>{
             try {
                 const data = JSON.parse(event.data);
-                setlatestmsg(data.message ?? event.data);
+                setallmsg((prev)=>[...prev,data.message ?? event.data]);
             } catch {
-                setlatestmsg(event.data);
+                setallmsg((prev)=>[...prev, event.data]);
             }
         }
 
-        socket.onerror = ()=>{
-            setlatestmsg("socket error: check that the websocket server is running on port 8080");
-        }
+        
 
         socket.onclose = ()=>{
             setIsConnected(false);
@@ -43,9 +40,21 @@ export const Socketconnect = ({ roomId }: Props) => {
         }
     },[roomId])
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/50 text-white backdrop-blur-sm">
-        <p>{isConnected ? `Connected to ${roomId}` : "Connecting..."}</p>
-        <div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 text-white backdrop-blur-sm">
+      <div className="flex h-[80vh] w-full max-w-md flex-col gap-3 px-4">
+        <p className="shrink-0 text-center">{isConnected ? `CONNECTED TO ${roomId}` : "Connecting..."}</p>
+        <div className="flex min-h-0 flex-1 flex-col items-start gap-2 overflow-y-auto rounded-md border border-white/30 p-3">
+
+           {allmsg.map((msg, index) => (
+
+            <div className="max-w-full rounded-md border-2 p-2 text-left" key={index}>
+                {msg}
+            </div>
+
+             ))}
+
+        </div>
+        <div className="flex shrink-0">
         <input className="border rounded-md ml-2 mr-2 px-2 py-1" placeholder="Type a message" onChange={(e)=>{
             setmsg(e.target.value);
         }}></input>
@@ -58,10 +67,11 @@ export const Socketconnect = ({ roomId }: Props) => {
         }} 
         className="cursor-pointer border-2 rounded-md mr-2 ml-2 pl-2 pr-2 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50">Send</button>
         </div>
-        <p>Received: {latestmsg}</p>
+        
         <button onClick={()=>{socketref.current?.close()
             }}
-         className="cursor-pointer border-2 rounded-md mr-2 ml-2 pl-2 pr-2 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50">Close</button>
+         className="shrink-0 cursor-pointer border-2 rounded-md mr-2 ml-2 pl-2 pr-2 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50">Close</button>
+      </div>
     </div>
   )
 }
